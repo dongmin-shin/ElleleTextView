@@ -1,0 +1,7 @@
+<resources>
+
+    <declare-styleable name="ElleleTextView">
+        <attr name="removeSpaceFrontOfText" format="boolean" />
+    </declare-styleable>
+
+</resources>
