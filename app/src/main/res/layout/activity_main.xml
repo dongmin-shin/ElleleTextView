@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="25dp"
+    tools:context="com.example.acsha.ellipsizetextview.MainActivity">
+
+
+    <com.example.acsha.ellipsizetextview.ElleleTextView
+        android:id="@+id/test_textview"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:background="#ffbbcc"
+        android:textColor="#000000"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:background="#ffbbcc"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="소리로 듣는 세상, 오디오클립의 이야기를 만나보세요!"
+        android:textStyle="bold" />
+
+
+    <TextView
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:background="#ffbbcc"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:padding="15dp"
+        android:text="소리로 듣는 세상, 오디오클립의 이야기를 만나보세요!"
+        android:textStyle="bold" />
+
+    <backup.ElliTextView
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:background="#ffbbcc"
+        android:maxLines="2"
+        android:padding="15dp"
+        android:text="소리로 듣는 세상, 오디오클립의 이야기를 만나보세요!"
+        android:textStyle="bold" />
+
+</LinearLayout>
