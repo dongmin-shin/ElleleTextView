@@ -22,7 +22,7 @@ import java.util.List;
 public class ElleleTextView extends TextView {
 
     private static final String ELLIPSIZE_STRING = "...";
-    public static final char SPACE_CHARACTER = ' ';
+    private static final char SPACE_CHARACTER = ' ';
 
     private final List<String> lineBuildList = Collections.synchronizedList(new ArrayList<String>());
 
@@ -34,7 +34,6 @@ public class ElleleTextView extends TextView {
     private int lineSpacing;
 
     private boolean isEnabledRemoveSpaceFrontOfText;
-
 
     public ElleleTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -55,9 +54,34 @@ public class ElleleTextView extends TextView {
         loadAttributes(attrs);
     }
 
+    @Override
+    protected void onDraw(Canvas canvas) {
+        composeLineBreakWidthEllipsize();
+
+        float x = getPaddingLeft();
+        float y = getPaddingTop() - ascent;
+
+        int size = lineBuildList.size();
+        for (int i = 0; i < size; i++) {
+            String text = lineBuildList.get(i);
+
+            canvas.drawText(text, 0, text.length(), x, y, textPaint);
+
+            y += (-ascent + textPaint.descent()) + lineSpacing;
+            if (y > canvas.getHeight()) {
+                break;
+            }
+
+            if (i == maxLine - 1) {
+                break;
+            }
+        }
+    }
+
     private void loadAttributes(AttributeSet attrs) {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ElleleTextView);
         isEnabledRemoveSpaceFrontOfText = typedArray.getBoolean(R.styleable.ElleleTextView_removeSpaceFrontOfText, false);
+        typedArray.recycle();
     }
 
     private void init() {
@@ -93,14 +117,12 @@ public class ElleleTextView extends TextView {
             String sliceText = originalText.substring(startIndex, endIndex);
 
             // LineBreak한 두 번째 문장 부터 첫 글자 앞에 공백'들'이 존재한다면 제거한다.
-            if (isEnabledRemoveSpaceFrontOfText) {
-                if (isLineBreakedSentence(startIndex)) {
-                    String removedSpaceFrontOfSlicedText = getRemovedSpaceFrontOfText(sliceText);
-                    if (sliceText.length() != removedSpaceFrontOfSlicedText.length()) {
-                        originalText = replaceOriginalText(startIndex, originalText, endIndex, removedSpaceFrontOfSlicedText);
-                        extractText = originalText.substring(startIndex, originalText.length());
-                        continue;
-                    }
+            if (isEnabledRemoveSpaceFrontOfText && isLineBreakSentence(startIndex)) {
+                String removedSpaceFrontOfSlicedText = getRemovedSpaceFrontOfText(sliceText);
+                if (sliceText.length() != removedSpaceFrontOfSlicedText.length()) {
+                    originalText = replaceOriginalText(startIndex, originalText, endIndex, removedSpaceFrontOfSlicedText);
+                    extractText = originalText.substring(startIndex, originalText.length());
+                    continue;
                 }
             }
 
@@ -144,13 +166,12 @@ public class ElleleTextView extends TextView {
     @NonNull
     private String replaceOriginalText(int startIndex, String originalText, int endIndex, String sliceTextByRemovedSpace) {
         String frontBlock = originalText.substring(0, startIndex);
-        String centerBlock = sliceTextByRemovedSpace;
         String backBlock = originalText.substring(endIndex, originalText.length());
 
-        return frontBlock + centerBlock + backBlock;
+        return frontBlock + sliceTextByRemovedSpace + backBlock;
     }
 
-    private boolean isLineBreakedSentence(int startIndex) {
+    private boolean isLineBreakSentence(int startIndex) {
         return startIndex > 0;
     }
 
@@ -174,8 +195,8 @@ public class ElleleTextView extends TextView {
     /**
      * 재귀를 돌면서 마지막 문장에 말줄임표를 추가한 최대한의 문장 크기를 구한다.
      *
-     * @param text
-     * @return
+     * @param text - 말줄임을 하고자 하는 문장
+     * @return - 파라메터로 넘어온 text에 현재 화면에 표시할 수 있는 가로 크기를 계산, 문장에 말줄임을 추가한 값을 반환
      */
     private String getEllipsizeSentenceByRecursive(final String text) {
         String ellipsizeText = text + ELLIPSIZE_STRING;
@@ -188,30 +209,6 @@ public class ElleleTextView extends TextView {
         } else {
             String removeLastCharacterText = text.substring(0, text.length() - 1);
             return getEllipsizeSentenceByRecursive(removeLastCharacterText);
-        }
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        composeLineBreakWidthEllipsize();
-
-        float x = getPaddingLeft();
-        float y = getPaddingTop() - ascent;
-
-        int size = lineBuildList.size();
-        for (int i = 0; i < size; i++) {
-            String text = lineBuildList.get(i);
-
-            canvas.drawText(text, 0, text.length(), x, y, textPaint);
-
-            y += (-ascent + textPaint.descent()) + lineSpacing;
-            if (y > canvas.getHeight()) {
-                break;
-            }
-
-            if (i == maxLine - 1) {
-                break;
-            }
         }
     }
 
