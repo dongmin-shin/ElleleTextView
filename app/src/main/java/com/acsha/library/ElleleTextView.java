@@ -1,4 +1,4 @@
-package com.example.acsha.ellipsizetextview;
+package com.acsha.library;
 
 import android.content.Context;
 import android.content.res.TypedArray;
