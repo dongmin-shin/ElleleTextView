@@ -87,6 +87,7 @@ public class ElleleTextView extends TextView {
     private void init() {
         maxLine = getMaxLines();
         textPaint = getPaint();
+        textPaint.setColor(getCurrentTextColor());
         text = (String) getText();
         lineSpacing = (int) getLineSpacingExtra();
         ascent = (int) textPaint.ascent();
