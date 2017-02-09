@@ -3,6 +3,7 @@ package com.acsha.library;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -24,11 +25,13 @@ public class ElleleTextView extends TextView {
     private static final String ELLIPSIZE_STRING = "...";
     private static final char SPACE_CHARACTER = ' ';
 
-    private final List<String> lineBuildList = Collections.synchronizedList(new ArrayList<String>());
+    private final List<CharSequence> lineBuildList = Collections.synchronizedList(new ArrayList<CharSequence>());
 
     private int maxLine;
     private TextPaint textPaint;
-    private String text;
+    private CharSequence text;
+
+    private Drawable[] compoundDrawables;
 
     private int ascent;
     private int lineSpacing;
@@ -56,14 +59,20 @@ public class ElleleTextView extends TextView {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        onDrawCompoundDrawable(canvas);
+
+        onDrawText(canvas);
+    }
+
+    private void onDrawText(Canvas canvas) {
         composeLineBreakWidthEllipsize();
 
-        float x = getPaddingLeft();
+        float x = getPaddingLeft() + getCompoundPaddingLeft();
         float y = getPaddingTop() - ascent;
 
         int size = lineBuildList.size();
         for (int i = 0; i < size; i++) {
-            String text = lineBuildList.get(i);
+            CharSequence text = lineBuildList.get(i);
 
             canvas.drawText(text, 0, text.length(), x, y, textPaint);
 
@@ -78,6 +87,14 @@ public class ElleleTextView extends TextView {
         }
     }
 
+    private void onDrawCompoundDrawable(Canvas canvas) {
+        for (Drawable compoundDrawable : compoundDrawables) {
+            if (compoundDrawable != null) {
+                compoundDrawable.draw(canvas);
+            }
+        }
+    }
+
     private void loadAttributes(AttributeSet attrs) {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ElleleTextView);
         isEnabledRemoveSpaceFrontOfText = typedArray.getBoolean(R.styleable.ElleleTextView_removeSpaceFrontOfText, false);
@@ -88,13 +105,14 @@ public class ElleleTextView extends TextView {
         maxLine = getMaxLines();
         textPaint = getPaint();
         textPaint.setColor(getCurrentTextColor());
-        text = (String) getText();
+        text = getText();
         lineSpacing = (int) getLineSpacingExtra();
         ascent = (int) textPaint.ascent();
+        compoundDrawables = getCompoundDrawables();
     }
 
     private int getAvailableWidth() {
-        return getWidth() - getPaddingLeft() - getPaddingRight();
+        return getWidth() - getPaddingLeft() - getPaddingRight() - getCompoundPaddingLeft() - getCompoundPaddingRight();
     }
 
     /**
@@ -110,19 +128,19 @@ public class ElleleTextView extends TextView {
         }
 
         int startIndex = 0;
-        String originalText = text;
-        String extractText = originalText;
+        CharSequence originalText = text;
+        CharSequence extractText = originalText;
 
         while (true) {
             int endIndex = getLineBreakIndex(extractText) + startIndex;
-            String sliceText = originalText.substring(startIndex, endIndex);
+            CharSequence sliceText = originalText.subSequence(startIndex, endIndex);
 
             // LineBreak한 두 번째 문장 부터 첫 글자 앞에 공백'들'이 존재한다면 제거한다.
             if (isEnabledRemoveSpaceFrontOfText && isLineBreakSentence(startIndex)) {
                 String removedSpaceFrontOfSlicedText = getRemovedSpaceFrontOfText(sliceText);
                 if (sliceText.length() != removedSpaceFrontOfSlicedText.length()) {
                     originalText = replaceOriginalText(startIndex, originalText, endIndex, removedSpaceFrontOfSlicedText);
-                    extractText = originalText.substring(startIndex, originalText.length());
+                    extractText = originalText.subSequence(startIndex, originalText.length());
                     continue;
                 }
             }
@@ -133,18 +151,18 @@ public class ElleleTextView extends TextView {
             }
 
             startIndex = endIndex;
-            extractText = originalText.substring(startIndex, originalText.length());
+            extractText = originalText.subSequence(startIndex, originalText.length());
         }
 
         composeEllipsize();
     }
 
-    private int getLineBreakIndex(String text) {
-        return textPaint.breakText(text, true, getAvailableWidth(), null);
+    private int getLineBreakIndex(CharSequence text) {
+        return textPaint.breakText(text, 0, text.length(), true, getAvailableWidth(), null);
     }
 
     @NonNull
-    private String getRemovedSpaceFrontOfText(String sliceText) {
+    private String getRemovedSpaceFrontOfText(CharSequence sliceText) {
         String sliceTextByRemovedSpace = "";
         boolean foundLetter = false;
         for (int i = 0; i < sliceText.length(); i++) {
@@ -165,9 +183,9 @@ public class ElleleTextView extends TextView {
     }
 
     @NonNull
-    private String replaceOriginalText(int startIndex, String originalText, int endIndex, String sliceTextByRemovedSpace) {
-        String frontBlock = originalText.substring(0, startIndex);
-        String backBlock = originalText.substring(endIndex, originalText.length());
+    private String replaceOriginalText(int startIndex, CharSequence originalText, int endIndex, String sliceTextByRemovedSpace) {
+        CharSequence frontBlock = originalText.subSequence(0, startIndex);
+        CharSequence backBlock = originalText.subSequence(endIndex, originalText.length());
 
         return frontBlock + sliceTextByRemovedSpace + backBlock;
     }
@@ -188,8 +206,8 @@ public class ElleleTextView extends TextView {
             return;
         }
 
-        String targetEllipsizedString = lineBuildList.get(maxLine - 1);
-        String resultEllipsizedString = getEllipsizeSentenceByRecursive(targetEllipsizedString);
+        CharSequence targetEllipsizedString = lineBuildList.get(maxLine - 1);
+        CharSequence resultEllipsizedString = getEllipsizeSentenceByRecursive(targetEllipsizedString);
         lineBuildList.set(maxLine - 1, resultEllipsizedString);
     }
 
@@ -199,7 +217,7 @@ public class ElleleTextView extends TextView {
      * @param text - 말줄임을 하고자 하는 문장
      * @return - 파라메터로 넘어온 text에 현재 화면에 표시할 수 있는 가로 크기를 계산, 문장에 말줄임을 추가한 값을 반환
      */
-    private String getEllipsizeSentenceByRecursive(final String text) {
+    private String getEllipsizeSentenceByRecursive(final CharSequence text) {
         String ellipsizeText = text + ELLIPSIZE_STRING;
         int totalLength = ellipsizeText.length();
         int breakIndex = getLineBreakIndex(ellipsizeText);
@@ -208,7 +226,7 @@ public class ElleleTextView extends TextView {
             return ellipsizeText;
 
         } else {
-            String removeLastCharacterText = text.substring(0, text.length() - 1);
+            CharSequence removeLastCharacterText = text.subSequence(0, text.length() - 1);
             return getEllipsizeSentenceByRecursive(removeLastCharacterText);
         }
     }
