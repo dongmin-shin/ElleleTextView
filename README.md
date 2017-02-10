@@ -54,6 +54,7 @@ dependencies {
 - headDrawable : 첫 문장 앞에 이미지를 추가한다. 이미지는 문장의 높이에 맞춰 자동으로 리사이즈 되며, 두 번째 이상의 문장부터는 headImage의 크기와 상관 없이 문장이 시작된다.
 - headDrawablePaddingRight : headDrawable과 첫 문장 사이의 Padding
 - headDrawableVisibility : headDrawable을 노출 시킬지 여부를 결정한다. (View.Visible / View.Gone, default: visible)
+- enableEllipsize : 말줄임을 할 것인지 여부를 결정한다. (default: false)
 
 <br>
 

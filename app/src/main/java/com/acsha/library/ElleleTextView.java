@@ -50,6 +50,8 @@ public class ElleleTextView extends TextView {
     private float headDrawableResizeHeight;
     private int headDrawableVisibility;
 
+    private boolean isEnabledEllipsize;
+
     public ElleleTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
         loadAttributes(attrs);
@@ -152,12 +154,18 @@ public class ElleleTextView extends TextView {
         headDrawable = typedArray.getDrawable(R.styleable.ElleleTextView_headDrawable);
         headDrawablePaddingRight = typedArray.getDimension(R.styleable.ElleleTextView_headDrawablePaddingRight, 0);
         headDrawableVisibility = typedArray.getInt(R.styleable.ElleleTextView_headDrawableVisibility, View.VISIBLE);
+        isEnabledEllipsize = typedArray.getBoolean(R.styleable.ElleleTextView_enableEllipsize, false);
 
         typedArray.recycle();
     }
 
     public void setHeadDrawableVisibility(int headDrawableVisibility) {
         this.headDrawableVisibility = headDrawableVisibility;
+        invalidate();
+    }
+
+    public void setEnabledEllipsize(boolean enabledEllipsize) {
+        isEnabledEllipsize = enabledEllipsize;
         invalidate();
     }
 
@@ -224,7 +232,9 @@ public class ElleleTextView extends TextView {
             extractText = originalText.subSequence(startIndex, originalText.length());
         }
 
-        composeEllipsize();
+        if (isEnabledEllipsize) {
+            composeEllipsize();
+        }
     }
 
     private int findLineFeedIndex(CharSequence extractText) {

@@ -16,6 +16,7 @@
             <enum name="visible" value="0" />
             <enum name="gone" value="8" />
         </attr>
+        <attr name="enableEllipsize" format="boolean" />
     </declare-styleable>
 
 </resources>
