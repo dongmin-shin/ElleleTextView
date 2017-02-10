@@ -27,6 +27,8 @@ public class ElleleTextView extends TextView {
 
     private static final String ELLIPSIZE_STRING = "...";
     private static final char SPACE_CHARACTER = ' ';
+    private static final char LINE_FEED = '\n';
+    private static final int INVALID_INDEX = -1;
 
     private final List<CharSequence> lineBuildList = Collections.synchronizedList(new ArrayList<CharSequence>());
 
@@ -195,6 +197,12 @@ public class ElleleTextView extends TextView {
                 endIndex = getLineBreakIndex(extractText) + startIndex;
             }
 
+            // find Line Feed & correction endIndex
+            int firstLineFeedIndex = findLineFeedIndex(extractText);
+            if (firstLineFeedIndex != INVALID_INDEX && endIndex > firstLineFeedIndex) {
+                endIndex = firstLineFeedIndex + startIndex + 1;
+            }
+
             CharSequence sliceText = originalText.subSequence(startIndex, endIndex);
 
             // LineBreak한 두 번째 문장 부터 첫 글자 앞에 공백'들'이 존재한다면 제거한다.
@@ -217,6 +225,17 @@ public class ElleleTextView extends TextView {
         }
 
         composeEllipsize();
+    }
+
+    private int findLineFeedIndex(CharSequence extractText) {
+        for (int i = 0; i < extractText.length(); i++) {
+            char extractCharacter = extractText.charAt(i);
+            if (extractCharacter == LINE_FEED) {
+                return i;
+            }
+        }
+
+        return INVALID_INDEX;
     }
 
     private int getLineBreakIndex(CharSequence text) {
