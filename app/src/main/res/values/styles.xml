@@ -8,12 +8,14 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-
-    <declare-styleable name="CustomATextView">
-        <attr name="maxLines" format="integer" />
-        <attr name="textColor" format="color" />
-        <attr name="textSize" format="dimension" />
-        <attr name="lineSpacing" format="dimension" />
+    <declare-styleable name="ElleleTextView">
+        <attr name="removeSpaceFrontOfText" format="boolean" />
+        <attr name="headDrawable" format="reference" />
+        <attr name="headDrawablePaddingRight" format="dimension" />
+        <attr name="headDrawableVisibility" format="enum">
+            <enum name="visible" value="0" />
+            <enum name="gone" value="8" />
+        </attr>
     </declare-styleable>
 
 </resources>

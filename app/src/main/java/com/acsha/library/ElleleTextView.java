@@ -7,9 +7,12 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.annotation.VisibleForTesting;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -36,32 +39,69 @@ public class ElleleTextView extends TextView {
     private int ascent;
     private int lineSpacing;
 
+    // Custom Style Option
     private boolean isEnabledRemoveSpaceFrontOfText;
+
+    private Drawable headDrawable;
+    private float headDrawablePaddingRight;
+    private float headDrawableResizeWidth;
+    private float headDrawableResizeHeight;
+    private int headDrawableVisibility;
 
     public ElleleTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
         loadAttributes(attrs);
+
+        init();
     }
 
     public ElleleTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
         loadAttributes(attrs);
+
+        init();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public ElleleTextView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        init();
         loadAttributes(attrs);
+
+        init();
+    }
+
+    private void init() {
+        maxLine = getMaxLines();
+        textPaint = getPaint();
+        textPaint.setColor(getCurrentTextColor());
+        text = getText();
+        lineSpacing = (int) getLineSpacingExtra();
+        ascent = (int) textPaint.ascent();
+        compoundDrawables = getCompoundDrawables();
+
+        if (headDrawable != null) {
+            headDrawableResizeHeight = getLineHeight();
+            headDrawableResizeWidth = (headDrawable.getIntrinsicWidth() * headDrawableResizeHeight) / headDrawable.getIntrinsicHeight();
+        }
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if (isShowHeadDrawable()) {
+            onDrawHeadDrawable(canvas);
+        }
+
         onDrawCompoundDrawable(canvas);
 
         onDrawText(canvas);
+    }
+
+    private void onDrawHeadDrawable(Canvas canvas) {
+        int x = getPaddingLeft() + getCompoundPaddingLeft();
+        int y = getPaddingTop();
+
+        headDrawable.setBounds(x, y, (int) (x + headDrawableResizeWidth), (int) (y + headDrawableResizeHeight));
+        headDrawable.draw(canvas);
     }
 
     private void onDrawText(Canvas canvas) {
@@ -70,11 +110,20 @@ public class ElleleTextView extends TextView {
         float x = getPaddingLeft() + getCompoundPaddingLeft();
         float y = getPaddingTop() - ascent;
 
+        float headDrawableX = x;
+        if (isShowHeadDrawable()) {
+            headDrawableX += headDrawableResizeWidth + headDrawablePaddingRight;
+        }
+
         int size = lineBuildList.size();
         for (int i = 0; i < size; i++) {
             CharSequence text = lineBuildList.get(i);
 
-            canvas.drawText(text, 0, text.length(), x, y, textPaint);
+            if (isShowHeadDrawable() && i == 0) {
+                canvas.drawText(text, 0, text.length(), headDrawableX, y, textPaint);
+            } else {
+                canvas.drawText(text, 0, text.length(), x, y, textPaint);
+            }
 
             y += (-ascent + textPaint.descent()) + lineSpacing;
             if (y > canvas.getHeight()) {
@@ -98,21 +147,28 @@ public class ElleleTextView extends TextView {
     private void loadAttributes(AttributeSet attrs) {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ElleleTextView);
         isEnabledRemoveSpaceFrontOfText = typedArray.getBoolean(R.styleable.ElleleTextView_removeSpaceFrontOfText, false);
+        headDrawable = typedArray.getDrawable(R.styleable.ElleleTextView_headDrawable);
+        headDrawablePaddingRight = typedArray.getDimension(R.styleable.ElleleTextView_headDrawablePaddingRight, 0);
+        headDrawableVisibility = typedArray.getInt(R.styleable.ElleleTextView_headDrawableVisibility, View.VISIBLE);
+
         typedArray.recycle();
     }
 
-    private void init() {
-        maxLine = getMaxLines();
-        textPaint = getPaint();
-        textPaint.setColor(getCurrentTextColor());
-        text = getText();
-        lineSpacing = (int) getLineSpacingExtra();
-        ascent = (int) textPaint.ascent();
-        compoundDrawables = getCompoundDrawables();
+    public void setHeadDrawableVisibility(int headDrawableVisibility) {
+        this.headDrawableVisibility = headDrawableVisibility;
+        invalidate();
+    }
+
+    private boolean isShowHeadDrawable() {
+        return headDrawable != null && headDrawableVisibility == View.VISIBLE;
     }
 
     private int getAvailableWidth() {
         return getWidth() - getPaddingLeft() - getPaddingRight() - getCompoundPaddingLeft() - getCompoundPaddingRight();
+    }
+
+    private int getAvailableWidthWithHeadDrawable() {
+        return (int) (getAvailableWidth() - headDrawableResizeWidth - headDrawablePaddingRight);
     }
 
     /**
@@ -131,8 +187,14 @@ public class ElleleTextView extends TextView {
         CharSequence originalText = text;
         CharSequence extractText = originalText;
 
-        while (true) {
-            int endIndex = getLineBreakIndex(extractText) + startIndex;
+        for (int i = 0; i < Integer.MAX_VALUE; i++) {
+            int endIndex;
+            if (isShowHeadDrawable() && i == 0) {
+                endIndex = getLineBreakIndexWithHeadDrawable(extractText) + startIndex;
+            } else {
+                endIndex = getLineBreakIndex(extractText) + startIndex;
+            }
+
             CharSequence sliceText = originalText.subSequence(startIndex, endIndex);
 
             // LineBreak한 두 번째 문장 부터 첫 글자 앞에 공백'들'이 존재한다면 제거한다.
@@ -159,6 +221,10 @@ public class ElleleTextView extends TextView {
 
     private int getLineBreakIndex(CharSequence text) {
         return textPaint.breakText(text, 0, text.length(), true, getAvailableWidth(), null);
+    }
+
+    private int getLineBreakIndexWithHeadDrawable(CharSequence text) {
+        return textPaint.breakText(text, 0, text.length(), true, getAvailableWidthWithHeadDrawable(), null);
     }
 
     @NonNull
@@ -220,15 +286,33 @@ public class ElleleTextView extends TextView {
     private String getEllipsizeSentenceByRecursive(final CharSequence text) {
         String ellipsizeText = text + ELLIPSIZE_STRING;
         int totalLength = ellipsizeText.length();
-        int breakIndex = getLineBreakIndex(ellipsizeText);
+
+        int breakIndex;
+        if (isShowHeadDrawable() && maxLine == 1) {
+            breakIndex = getLineBreakIndexWithHeadDrawable(ellipsizeText);
+        } else {
+            breakIndex = getLineBreakIndex(ellipsizeText);
+        }
 
         if (breakIndex >= totalLength) {
             return ellipsizeText;
+        }
 
-        } else {
+        if (text.length() > 0) {
             CharSequence removeLastCharacterText = text.subSequence(0, text.length() - 1);
             return getEllipsizeSentenceByRecursive(removeLastCharacterText);
+        } else {
+            return "";
         }
+    }
+
+    @VisibleForTesting
+    private void printAttributeDebug() {
+        Log.d("TEST", "isEnableRemoveSpaceFrontOfText: " + isEnabledRemoveSpaceFrontOfText + "\n"
+                + "headDrawable: " + headDrawable + "\n"
+                + "headDrawablePaddingRight: " + headDrawablePaddingRight
+                + "headDrawableVisibility: " + headDrawableVisibility);
+
     }
 
 }
