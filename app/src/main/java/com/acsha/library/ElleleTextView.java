@@ -3,6 +3,7 @@ package com.acsha.library;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -24,6 +25,11 @@ import java.util.List;
  */
 
 public class ElleleTextView extends TextView {
+
+    private static final int LEFT_DRAWABLE = 0;
+    private static final int TOP_DRAWABLE = 1;
+    private static final int RIGHT_DRAWABLE = 2;
+    private static final int BOTTOM_DRAWABLE = 3;
 
     private static final String ELLIPSIZE_STRING = "...";
     private static final char SPACE_CHARACTER = ' ';
@@ -101,7 +107,7 @@ public class ElleleTextView extends TextView {
     }
 
     private void onDrawHeadDrawable(Canvas canvas) {
-        int x = getPaddingLeft() + getCompoundPaddingLeft();
+        int x = getCompoundPaddingLeft();
         int y = getPaddingTop();
 
         headDrawable.setBounds(x, y, (int) (x + headDrawableResizeWidth), (int) (y + headDrawableResizeHeight));
@@ -111,7 +117,7 @@ public class ElleleTextView extends TextView {
     private void onDrawText(Canvas canvas) {
         composeLineBreakWidthEllipsize();
 
-        float x = getPaddingLeft() + getCompoundPaddingLeft();
+        float x = getCompoundPaddingLeft();
         float y = getPaddingTop() - ascent;
 
         float headDrawableX = x;
@@ -141,10 +147,22 @@ public class ElleleTextView extends TextView {
     }
 
     private void onDrawCompoundDrawable(Canvas canvas) {
-        for (Drawable compoundDrawable : compoundDrawables) {
-            if (compoundDrawable != null) {
-                compoundDrawable.draw(canvas);
-            }
+        // LeftDrawable Draw
+        Drawable leftDrawable = compoundDrawables[LEFT_DRAWABLE];
+        if (leftDrawable != null) {
+            Rect boundRect = leftDrawable.getBounds();
+            int correctionValue = getPaddingLeft();
+            boundRect.set(boundRect.left + correctionValue, boundRect.top, boundRect.right + correctionValue, boundRect.bottom);
+            leftDrawable.setBounds(boundRect);
+            leftDrawable.draw(canvas);
+        }
+
+        Drawable rightDrawable = compoundDrawables[RIGHT_DRAWABLE];
+        if (rightDrawable != null) {
+            Rect boundRect = rightDrawable.getBounds();
+            int correctionValue = getWidth() - boundRect.width();
+            boundRect.set(boundRect.left + correctionValue, boundRect.top, boundRect.right + correctionValue, boundRect.bottom);
+            rightDrawable.draw(canvas);
         }
     }
 
@@ -174,7 +192,7 @@ public class ElleleTextView extends TextView {
     }
 
     private int getAvailableWidth() {
-        return getWidth() - getPaddingLeft() - getPaddingRight() - getCompoundPaddingLeft() - getCompoundPaddingRight();
+        return getWidth() - getCompoundPaddingLeft() - getCompoundPaddingRight();
     }
 
     private int getAvailableWidthWithHeadDrawable() {
