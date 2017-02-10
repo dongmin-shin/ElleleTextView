@@ -51,6 +51,7 @@ public class ElleleTextView extends TextView {
     private boolean isEnabledRemoveSpaceFrontOfText;
 
     private Drawable headDrawable;
+    private float headDrawableInnerOffset;
     private float headDrawablePaddingRight;
     private float headDrawableResizeWidth;
     private float headDrawableResizeHeight;
@@ -90,7 +91,7 @@ public class ElleleTextView extends TextView {
         compoundDrawables = getCompoundDrawables();
 
         if (headDrawable != null) {
-            headDrawableResizeHeight = getLineHeight();
+            headDrawableResizeHeight = getLineHeight() - headDrawableInnerOffset - lineSpacing;
             headDrawableResizeWidth = (headDrawable.getIntrinsicWidth() * headDrawableResizeHeight) / headDrawable.getIntrinsicHeight();
         }
     }
@@ -110,7 +111,14 @@ public class ElleleTextView extends TextView {
         int x = getCompoundPaddingLeft();
         int y = getPaddingTop();
 
-        headDrawable.setBounds(x, y, (int) (x + headDrawableResizeWidth), (int) (y + headDrawableResizeHeight));
+        // Todo. HeadDrawable에 대한 Gravity 설정이 가능하도록 제공해야 한다.
+        // Align Center
+        int startY = y;
+        if (headDrawableInnerOffset != 0) {
+            startY = (int) (y + (getLineHeight() - headDrawableResizeHeight - lineSpacing) / 2);
+        }
+
+        headDrawable.setBounds(x, startY, (int) (x + headDrawableResizeWidth), (int) (startY + headDrawableResizeHeight));
         headDrawable.draw(canvas);
     }
 
@@ -170,6 +178,7 @@ public class ElleleTextView extends TextView {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ElleleTextView);
         isEnabledRemoveSpaceFrontOfText = typedArray.getBoolean(R.styleable.ElleleTextView_removeSpaceFrontOfText, false);
         headDrawable = typedArray.getDrawable(R.styleable.ElleleTextView_headDrawable);
+        headDrawableInnerOffset = typedArray.getDimension(R.styleable.ElleleTextView_headDrawableInnerOffset, 0);
         headDrawablePaddingRight = typedArray.getDimension(R.styleable.ElleleTextView_headDrawablePaddingRight, 0);
         headDrawableVisibility = typedArray.getInt(R.styleable.ElleleTextView_headDrawableVisibility, View.VISIBLE);
         isEnabledEllipsize = typedArray.getBoolean(R.styleable.ElleleTextView_enableEllipsize, false);

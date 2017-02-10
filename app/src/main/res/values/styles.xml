@@ -11,6 +11,7 @@
     <declare-styleable name="ElleleTextView">
         <attr name="removeSpaceFrontOfText" format="boolean" />
         <attr name="headDrawable" format="reference" />
+        <attr name="headDrawableInnerOffset" format="dimension" />
         <attr name="headDrawablePaddingRight" format="dimension" />
         <attr name="headDrawableVisibility" format="enum">
             <enum name="visible" value="0" />
