@@ -7,7 +7,9 @@
         <attr name="removeSpaceFrontOfText" format="boolean" />
         <attr name="headDrawable" format="reference" />
         <attr name="headDrawableInnerOffset" format="dimension" />
-        <attr name="headDrawablePaddingRight" format="dimension" />
+        <attr name="headDrawableInnerPaddingTop" format="dimension" />
+        <attr name="headDrawableInnerPaddingBottom" format="dimension" />
+        <attr name="headDrawableMarginRight" format="dimension" />
         <attr name="headDrawableVisibility" format="enum">
             <enum name="visible" value="0" />
             <enum name="gone" value="8" />

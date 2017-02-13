@@ -52,7 +52,9 @@ public class ElleleTextView extends TextView {
 
     private Drawable headDrawable;
     private float headDrawableInnerOffset;
-    private float headDrawablePaddingRight;
+    private float headDrawableInnerPaddingTop;
+    private float headDrawableInnerPaddingBottom;
+    private float headDrawableMarginRight;
     private float headDrawableResizeWidth;
     private float headDrawableResizeHeight;
     private int headDrawableVisibility;
@@ -118,6 +120,14 @@ public class ElleleTextView extends TextView {
             startY = (int) (y + (getLineHeight() - headDrawableResizeHeight - lineSpacing) / 2);
         }
 
+        if (headDrawableInnerPaddingTop != 0) {
+            startY += headDrawableInnerPaddingTop;
+        }
+
+        if (headDrawableInnerPaddingBottom != 0) {
+            startY -= headDrawableInnerPaddingBottom;
+        }
+
         headDrawable.setBounds(x, startY, (int) (x + headDrawableResizeWidth), (int) (startY + headDrawableResizeHeight));
         headDrawable.draw(canvas);
     }
@@ -130,7 +140,7 @@ public class ElleleTextView extends TextView {
 
         float headDrawableX = x;
         if (isShowHeadDrawable()) {
-            headDrawableX += headDrawableResizeWidth + headDrawablePaddingRight;
+            headDrawableX += headDrawableResizeWidth + headDrawableMarginRight;
         }
 
         int size = lineBuildList.size();
@@ -179,7 +189,9 @@ public class ElleleTextView extends TextView {
         isEnabledRemoveSpaceFrontOfText = typedArray.getBoolean(R.styleable.ElleleTextView_removeSpaceFrontOfText, false);
         headDrawable = typedArray.getDrawable(R.styleable.ElleleTextView_headDrawable);
         headDrawableInnerOffset = typedArray.getDimension(R.styleable.ElleleTextView_headDrawableInnerOffset, 0);
-        headDrawablePaddingRight = typedArray.getDimension(R.styleable.ElleleTextView_headDrawablePaddingRight, 0);
+        headDrawableInnerPaddingTop = typedArray.getDimension(R.styleable.ElleleTextView_headDrawableInnerPaddingTop, 0);
+        headDrawableInnerPaddingBottom = typedArray.getDimension(R.styleable.ElleleTextView_headDrawableInnerPaddingBottom, 0);
+        headDrawableMarginRight = typedArray.getDimension(R.styleable.ElleleTextView_headDrawableMarginRight, 0);
         headDrawableVisibility = typedArray.getInt(R.styleable.ElleleTextView_headDrawableVisibility, View.VISIBLE);
         isEnabledEllipsize = typedArray.getBoolean(R.styleable.ElleleTextView_enableEllipsize, false);
 
@@ -205,7 +217,7 @@ public class ElleleTextView extends TextView {
     }
 
     private int getAvailableWidthWithHeadDrawable() {
-        return (int) (getAvailableWidth() - headDrawableResizeWidth - headDrawablePaddingRight);
+        return (int) (getAvailableWidth() - headDrawableResizeWidth - headDrawableMarginRight);
     }
 
     /**
@@ -366,7 +378,7 @@ public class ElleleTextView extends TextView {
     private void printAttributeDebug() {
         Log.d("TEST", "isEnableRemoveSpaceFrontOfText: " + isEnabledRemoveSpaceFrontOfText + "\n"
                 + "headDrawable: " + headDrawable + "\n"
-                + "headDrawablePaddingRight: " + headDrawablePaddingRight
+                + "headDrawableMarginRight: " + headDrawableMarginRight
                 + "headDrawableVisibility: " + headDrawableVisibility);
 
     }
