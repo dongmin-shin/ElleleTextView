@@ -85,6 +85,10 @@ public class ElleleTextView extends TextView {
 
     private void init() {
         maxLine = getMaxLines();
+        if (maxLine == 1) {
+            setSingleLine();
+        }
+
         textPaint = getPaint();
         textPaint.setColor(getCurrentTextColor());
         text = getText();
@@ -154,6 +158,7 @@ public class ElleleTextView extends TextView {
             }
 
             y += (-ascent + textPaint.descent()) + lineSpacing;
+
             if (y > canvas.getHeight()) {
                 break;
             }
