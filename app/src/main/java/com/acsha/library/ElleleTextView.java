@@ -61,18 +61,20 @@ public class ElleleTextView extends TextView {
 
     private boolean isEnabledEllipsize;
 
+    private int prevMaxLine = -1;
+
     public ElleleTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
         loadAttributes(attrs);
 
-        init();
+        initialize();
     }
 
     public ElleleTextView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         loadAttributes(attrs);
 
-        init();
+        initialize();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -80,15 +82,17 @@ public class ElleleTextView extends TextView {
         super(context, attrs, defStyleAttr, defStyleRes);
         loadAttributes(attrs);
 
-        init();
+        initialize();
     }
 
-    private void init() {
+    private void initialize() {
         maxLine = getMaxLines();
-        if (maxLine == 1) {
+        if (maxLine == 1 && prevMaxLine != maxLine) {
+            // 실제 라인 값이 변경 됐을 때, 오직 한 번만 호출돼야 한다.
             setSingleLine();
         }
 
+        prevMaxLine = maxLine;
         textPaint = getPaint();
         textPaint.setColor(getCurrentTextColor());
         text = getText();
@@ -229,7 +233,7 @@ public class ElleleTextView extends TextView {
      * 글자 단위로 LineBreak를 한 뒤, 말줄임표가 들어간 문장을 구성한다.
      */
     private void composeLineBreakWidthEllipsize() {
-        init();
+        initialize();
 
         lineBuildList.clear();
 
