@@ -19,7 +19,7 @@ allprojects {
 #### Step 2. Add the dependency
 ```xml
 dependencies {
-    compile 'com.github.dongmin-shin:ElleleTextView:v0.0.2'
+    compile 'com.github.dongmin-shin:ElleleTextView:v0.0.3'
 }
 ```
 
