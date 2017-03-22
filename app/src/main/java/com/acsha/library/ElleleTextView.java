@@ -5,16 +5,14 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.support.annotation.VisibleForTesting;
+import android.support.v7.widget.AppCompatTextView;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +22,7 @@ import java.util.List;
  * @author dong.min.shin on 2017. 1. 20..
  */
 
-public class ElleleTextView extends TextView {
+public class ElleleTextView extends AppCompatTextView {
 
     private static final int LEFT_DRAWABLE = 0;
     private static final int TOP_DRAWABLE = 1;
@@ -77,14 +75,6 @@ public class ElleleTextView extends TextView {
         initialize();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public ElleleTextView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        loadAttributes(attrs);
-
-        initialize();
-    }
-
     private void initialize() {
         maxLine = getMaxLines();
         if (maxLine == 1 && prevMaxLine != maxLine) {
@@ -105,6 +95,45 @@ public class ElleleTextView extends TextView {
             headDrawableResizeWidth = (headDrawable.getIntrinsicWidth() * headDrawableResizeHeight) / headDrawable.getIntrinsicHeight();
         }
     }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        composeLineBreakWidthEllipsize();
+        setMeasuredDimension(widthMeasureSpec, getReadjustmentMeasureHeight(heightMeasureSpec));
+
+    }
+
+    private int getReadjustmentMeasureHeight(int heightMeasureSpec) {
+        int result;
+        int specMode = MeasureSpec.getMode(heightMeasureSpec);
+        int specSize = MeasureSpec.getSize(heightMeasureSpec);
+
+        ascent = (int) textPaint.ascent();
+        if (specMode == MeasureSpec.EXACTLY) {
+            result = specSize;
+
+        } else {
+            int textHeight = (int) (-ascent + textPaint.descent());
+            result = getPaddingTop() + getPaddingBottom();
+
+            if (lineBuildList.isEmpty()) {
+                result += textHeight;
+
+            } else {
+                int lineCount = Math.min(maxLine, lineBuildList.size());
+                result += lineCount * textHeight + (lineCount - 1) * lineSpacing;
+
+            }
+
+            if (specMode == MeasureSpec.AT_MOST) {
+                result = Math.min(result, specSize);
+            }
+        }
+
+        return result;
+    }
+
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -141,8 +170,6 @@ public class ElleleTextView extends TextView {
     }
 
     private void onDrawText(Canvas canvas) {
-        composeLineBreakWidthEllipsize();
-
         float x = getCompoundPaddingLeft();
         float y = getPaddingTop() - ascent;
 
@@ -222,7 +249,7 @@ public class ElleleTextView extends TextView {
     }
 
     private int getAvailableWidth() {
-        return getWidth() - getCompoundPaddingLeft() - getCompoundPaddingRight();
+        return getMeasuredWidth() - getCompoundPaddingLeft() - getCompoundPaddingRight();
     }
 
     private int getAvailableWidthWithHeadDrawable() {
@@ -391,5 +418,4 @@ public class ElleleTextView extends TextView {
                 + "headDrawableVisibility: " + headDrawableVisibility);
 
     }
-
 }
