@@ -99,9 +99,9 @@ public class ElleleTextView extends AppCompatTextView {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
         composeLineBreakWidthEllipsize();
         setMeasuredDimension(widthMeasureSpec, getReadjustmentMeasureHeight(heightMeasureSpec));
-
     }
 
     private int getReadjustmentMeasureHeight(int heightMeasureSpec) {
@@ -134,9 +134,12 @@ public class ElleleTextView extends AppCompatTextView {
         return result;
     }
 
-
     @Override
     protected void onDraw(Canvas canvas) {
+        if (isTextChanged()) {
+            composeLineBreakWidthEllipsize();
+        }
+
         if (isShowHeadDrawable()) {
             onDrawHeadDrawable(canvas);
         }
@@ -408,6 +411,17 @@ public class ElleleTextView extends AppCompatTextView {
         } else {
             return "";
         }
+    }
+
+    private CharSequence toTextRidOfNull(CharSequence charSequence) {
+        return charSequence == null ? "" : charSequence;
+    }
+
+    private boolean isTextChanged() {
+        CharSequence originText = toTextRidOfNull(text);
+        CharSequence targetText = toTextRidOfNull(getText());
+
+        return !originText.equals(targetText);
     }
 
     @VisibleForTesting
