@@ -24,6 +24,8 @@ import java.util.List;
 
 public class ElleleTextView extends AppCompatTextView {
 
+    private static final String TAG = ElleleTextView.class.getSimpleName();
+
     private static final int LEFT_DRAWABLE = 0;
     private static final int TOP_DRAWABLE = 1;
     private static final int RIGHT_DRAWABLE = 2;
@@ -56,6 +58,15 @@ public class ElleleTextView extends AppCompatTextView {
     private float headDrawableResizeWidth;
     private float headDrawableResizeHeight;
     private int headDrawableVisibility;
+
+    private Drawable secondHeadDrawable;
+    private float secondHeadDrawableInnerOffset;
+    private float secondHeadDrawableInnerPaddingTop;
+    private float secondHeadDrawableInnerPaddingBottom;
+    private float secondHeadDrawableMarginRight;
+    private float secondHeadDrawableResizeWidth;
+    private float secondHeadDrawableResizeHeight;
+    private int secondHeadDrawableVisibility;
 
     private boolean isEnabledEllipsize;
 
@@ -93,6 +104,11 @@ public class ElleleTextView extends AppCompatTextView {
         if (headDrawable != null) {
             headDrawableResizeHeight = getLineHeight() - headDrawableInnerOffset - lineSpacing;
             headDrawableResizeWidth = (headDrawable.getIntrinsicWidth() * headDrawableResizeHeight) / headDrawable.getIntrinsicHeight();
+        }
+
+        if (secondHeadDrawable != null) {
+            secondHeadDrawableResizeHeight = getLineHeight() - secondHeadDrawableInnerOffset - lineSpacing;
+            secondHeadDrawableResizeWidth = (secondHeadDrawable.getIntrinsicWidth() * secondHeadDrawableResizeHeight) / secondHeadDrawable.getIntrinsicHeight();
         }
     }
 
@@ -144,6 +160,10 @@ public class ElleleTextView extends AppCompatTextView {
             onDrawHeadDrawable(canvas);
         }
 
+        if (isShowSecondHeadDrawable()) {
+            onDrawSecondHeadDrawable(canvas);
+        }
+
         onDrawCompoundDrawable(canvas);
 
         onDrawText(canvas);
@@ -172,13 +192,41 @@ public class ElleleTextView extends AppCompatTextView {
         headDrawable.draw(canvas);
     }
 
+    private void onDrawSecondHeadDrawable(Canvas canvas) {
+        int x = (int) (getCompoundPaddingLeft() + headDrawable.getBounds().right + headDrawableMarginRight);
+        int y = getPaddingTop();
+
+        // Todo. HeadDrawable에 대한 Gravity 설정이 가능하도록 제공해야 한다.
+        // Align Center
+        int startY = y;
+        if (secondHeadDrawableInnerOffset != 0) {
+            startY = (int) (y + (getLineHeight() - secondHeadDrawableResizeHeight - lineSpacing) / 2);
+        }
+
+        if (secondHeadDrawableInnerPaddingTop != 0) {
+            startY += secondHeadDrawableInnerPaddingTop;
+        }
+
+        if (secondHeadDrawableInnerPaddingBottom != 0) {
+            startY -= secondHeadDrawableInnerPaddingBottom;
+        }
+
+        secondHeadDrawable.setBounds(x, startY, (int) (x + secondHeadDrawableResizeWidth), (int) (startY + secondHeadDrawableResizeHeight));
+        secondHeadDrawable.draw(canvas);
+    }
+
     private void onDrawText(Canvas canvas) {
         float x = getCompoundPaddingLeft();
         float y = getPaddingTop() - ascent;
 
         float headDrawableX = x;
-        if (isShowHeadDrawable()) {
-            headDrawableX += headDrawableResizeWidth + headDrawableMarginRight;
+
+        // 순서 주의 (Second -> First)
+        if (isShowSecondHeadDrawable()) {
+            headDrawableX += secondHeadDrawable.getBounds().right + secondHeadDrawableMarginRight;
+
+        } else if (isShowHeadDrawable()) {
+            headDrawableX += headDrawable.getBounds().right + headDrawableMarginRight;
         }
 
         int size = lineBuildList.size();
@@ -226,12 +274,44 @@ public class ElleleTextView extends AppCompatTextView {
     private void loadAttributes(AttributeSet attrs) {
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ElleleTextView);
         isEnabledRemoveSpaceFrontOfText = typedArray.getBoolean(R.styleable.ElleleTextView_removeSpaceFrontOfText, false);
+
+        // First Head
         headDrawable = typedArray.getDrawable(R.styleable.ElleleTextView_headDrawable);
         headDrawableInnerOffset = typedArray.getDimension(R.styleable.ElleleTextView_headDrawableInnerOffset, 0);
         headDrawableInnerPaddingTop = typedArray.getDimension(R.styleable.ElleleTextView_headDrawableInnerPaddingTop, 0);
         headDrawableInnerPaddingBottom = typedArray.getDimension(R.styleable.ElleleTextView_headDrawableInnerPaddingBottom, 0);
         headDrawableMarginRight = typedArray.getDimension(R.styleable.ElleleTextView_headDrawableMarginRight, 0);
         headDrawableVisibility = typedArray.getInt(R.styleable.ElleleTextView_headDrawableVisibility, View.VISIBLE);
+
+        // Second Head
+        secondHeadDrawable = typedArray.getDrawable(R.styleable.ElleleTextView_secondHeadDrawable);
+        secondHeadDrawableInnerOffset = typedArray.getDimension(R.styleable.ElleleTextView_secondHeadDrawableInnerOffset, 0);
+        secondHeadDrawableInnerPaddingTop = typedArray.getDimension(R.styleable.ElleleTextView_secondHeadDrawableInnerPaddingTop, 0);
+        secondHeadDrawableInnerPaddingBottom = typedArray.getDimension(R.styleable.ElleleTextView_secondHeadDrawableInnerPaddingBottom, 0);
+        secondHeadDrawableMarginRight = typedArray.getDimension(R.styleable.ElleleTextView_secondHeadDrawableMarginRight, 0);
+        secondHeadDrawableVisibility = typedArray.getInt(R.styleable.ElleleTextView_secondHeadDrawableVisibility, View.VISIBLE);
+
+        // First 를 설정 안하고 Second로만 설정했을 경우,
+        if (headDrawable == null && secondHeadDrawable != null) {
+            Log.w(TAG, "recommend set headDrawable");
+
+            // Second 값을 First로 설정
+            headDrawable = typedArray.getDrawable(R.styleable.ElleleTextView_secondHeadDrawable);
+            headDrawableInnerOffset = typedArray.getDimension(R.styleable.ElleleTextView_secondHeadDrawableInnerOffset, 0);
+            headDrawableInnerPaddingTop = typedArray.getDimension(R.styleable.ElleleTextView_secondHeadDrawableInnerPaddingTop, 0);
+            headDrawableInnerPaddingBottom = typedArray.getDimension(R.styleable.ElleleTextView_secondHeadDrawableInnerPaddingBottom, 0);
+            headDrawableMarginRight = typedArray.getDimension(R.styleable.ElleleTextView_secondHeadDrawableMarginRight, 0);
+            headDrawableVisibility = typedArray.getInt(R.styleable.ElleleTextView_secondHeadDrawableVisibility, View.VISIBLE);
+
+            // Second 값 초기화
+            secondHeadDrawable = null;
+            secondHeadDrawableInnerOffset = 0;
+            secondHeadDrawableInnerPaddingTop = 0;
+            secondHeadDrawableInnerPaddingBottom = 0;
+            secondHeadDrawableMarginRight = 0;
+            secondHeadDrawableVisibility = 0;
+        }
+
         isEnabledEllipsize = typedArray.getBoolean(R.styleable.ElleleTextView_enableEllipsize, false);
 
         typedArray.recycle();
@@ -239,6 +319,11 @@ public class ElleleTextView extends AppCompatTextView {
 
     public void setHeadDrawableVisibility(int headDrawableVisibility) {
         this.headDrawableVisibility = headDrawableVisibility;
+        invalidate();
+    }
+
+    public void setSecondHeadDrawableVisibility(int secondHeadDrawableVisibility) {
+        this.secondHeadDrawableVisibility = secondHeadDrawableVisibility;
         invalidate();
     }
 
@@ -251,12 +336,20 @@ public class ElleleTextView extends AppCompatTextView {
         return headDrawable != null && headDrawableVisibility == View.VISIBLE;
     }
 
+    private boolean isShowSecondHeadDrawable() {
+        return secondHeadDrawable != null && secondHeadDrawableVisibility == View.VISIBLE;
+    }
+
     private int getAvailableWidth() {
         return getMeasuredWidth() - getCompoundPaddingLeft() - getCompoundPaddingRight();
     }
 
     private int getAvailableWidthWithHeadDrawable() {
         return (int) (getAvailableWidth() - headDrawableResizeWidth - headDrawableMarginRight);
+    }
+
+    private int getAvailableWidthWithSecondHeadDrawable() {
+        return (int) (getAvailableWidthWithHeadDrawable() - secondHeadDrawableResizeWidth - secondHeadDrawableMarginRight);
     }
 
     /**
@@ -277,7 +370,10 @@ public class ElleleTextView extends AppCompatTextView {
 
         for (int i = 0; i < Integer.MAX_VALUE; i++) {
             int endIndex;
-            if (isShowHeadDrawable() && i == 0) {
+            // 순서 주의
+            if (isShowHeadDrawable() && isShowSecondHeadDrawable() && i == 0) {
+                endIndex = getLineBreakIndexWithSecondHeadDrawable(extractText) + startIndex;
+            } else if (isShowHeadDrawable() && i == 0) {
                 endIndex = getLineBreakIndexWithHeadDrawable(extractText) + startIndex;
             } else {
                 endIndex = getLineBreakIndex(extractText) + startIndex;
@@ -332,6 +428,10 @@ public class ElleleTextView extends AppCompatTextView {
 
     private int getLineBreakIndexWithHeadDrawable(CharSequence text) {
         return textPaint.breakText(text, 0, text.length(), true, getAvailableWidthWithHeadDrawable(), null);
+    }
+
+    private int getLineBreakIndexWithSecondHeadDrawable(CharSequence text) {
+        return textPaint.breakText(text, 0, text.length(), true, getAvailableWidthWithSecondHeadDrawable(), null);
     }
 
     @NonNull

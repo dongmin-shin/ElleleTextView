@@ -14,6 +14,15 @@
             <enum name="visible" value="0" />
             <enum name="gone" value="8" />
         </attr>
+        <attr name="secondHeadDrawable" format="reference" />
+        <attr name="secondHeadDrawableInnerOffset" format="dimension" />
+        <attr name="secondHeadDrawableInnerPaddingTop" format="dimension" />
+        <attr name="secondHeadDrawableInnerPaddingBottom" format="dimension" />
+        <attr name="secondHeadDrawableMarginRight" format="dimension" />
+        <attr name="secondHeadDrawableVisibility" format="enum">
+            <enum name="visible" value="0" />
+            <enum name="gone" value="8" />
+        </attr>
         <attr name="enableEllipsize" format="boolean" />
     </declare-styleable>
 
